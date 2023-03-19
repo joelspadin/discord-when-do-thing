@@ -14,10 +14,11 @@ flexible. Fork it and fix it if that doesn't work for you.
 
 1. Clone this repo.
 2. Make a Discord bot.
-3. Create a `.env` file at the root of the repo. Put your bot's token in the file:
+3. Create a `.env` file at the root of the repo. Put your bot's application ID and token in the file:
 
    ```ini
-   TOKEN=yourtokengoeshere
+   APP_ID=...
+   TOKEN=...
    ```
 
 4. Run these commands to install dependencies and start the bot:

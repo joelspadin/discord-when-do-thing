@@ -1,37 +1,47 @@
-import { Client, Intents } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import * as dotenv from 'dotenv';
-import { handleButton, handleCommand, registerCommands } from './commands';
+import { getCommands } from './commands';
+import { Command } from './commands/command';
 import { getInviteLink } from './invite';
 
 dotenv.config();
 
-const client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+class MyClient extends Client {
+    commands = new Collection<string, Command>();
+}
+
+const client = new MyClient({
+    intents: [GatewayIntentBits.Guilds],
 });
 
-client.on('ready', async () => {
-    console.log(getInviteLink(client));
+client.commands = getCommands();
 
-    await registerCommands(client);
+client.once(Events.ClientReady, (c) => {
+    console.log(`Ready! Logged in as ${c.user.tag}`);
+    console.log('Invite bot with:');
+    console.log(getInviteLink(c));
 });
 
-client.on('message', async (message) => {
-    if (!client.application?.owner) {
-        await client.application?.fetch();
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) {
+        return;
     }
 
-    if (message.content === '!deploy' && message.guild && message.author.id === client.application?.owner?.id) {
-        await registerCommands(client, message.guild);
-    }
-});
-
-client.on('interaction', async (interaction) => {
-    if (interaction.isCommand()) {
-        await handleCommand(client, interaction);
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+        console.error(`Missing command ${interaction.commandName}`);
+        return;
     }
 
-    if (interaction.isButton()) {
-        await handleButton(client, interaction);
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({ content: 'There was an error while executing the command', ephemeral: true });
+        } else {
+            await interaction.reply({ content: 'There was an error while executing the command', ephemeral: true });
+        }
     }
 });
 

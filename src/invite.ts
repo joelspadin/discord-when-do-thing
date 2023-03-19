@@ -1,6 +1,9 @@
-import { Client, Permissions } from 'discord.js';
+import { Client, PermissionsBitField } from 'discord.js';
 
-const permissions = new Permissions([Permissions.FLAGS.SEND_MESSAGES, Permissions.FLAGS.USE_APPLICATION_COMMANDS]);
+const permissions = new PermissionsBitField([
+    PermissionsBitField.Flags.SendMessages,
+    PermissionsBitField.Flags.UseApplicationCommands,
+]);
 
 export function getInviteLink(client: Client) {
     const params = new URLSearchParams({
